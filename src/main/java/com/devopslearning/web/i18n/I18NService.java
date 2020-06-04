@@ -11,8 +11,8 @@ import java.util.Locale;
 
 @Service
 public class I18NService {
-    /**The Application logger*/
-    private static final Logger LOG = LoggerFactory.getLogger(I18NService.class);
+     /** The application logger */
+         private static final Logger LOG = LoggerFactory.getLogger(I18NService.class);
     @Autowired
     private MessageSource messageSource;
 
