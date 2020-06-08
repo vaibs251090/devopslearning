@@ -18,7 +18,7 @@ class DevopslearningApplicationTests {
 
     @Test
     public void testMessgaeI18n() throws Exception{
-        String expectedResult =  "Bootstrap Starter Template";
+        String expectedResult =  "Bootstrap starter template";
         String messageId = "index.main.callout";
         String actual_message = i18NService.getMessage(messageId);
         //Assertions.assertEquals(expectedResult, actual_message, "The expected message do not matches with actual messg");
