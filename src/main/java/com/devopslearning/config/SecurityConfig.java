@@ -21,6 +21,9 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig  extends WebSecurityConfigurerAdapter  {
+
+    @Autowired
+    private Environment env;
     /** Public URLs. */
     private static final String[] PUBLIC_MATCHERS = {
             "/webjars/**",
@@ -36,6 +39,11 @@ public class SecurityConfig  extends WebSecurityConfigurerAdapter  {
     };
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        List<String > activeProfiles = Arrays.asList(env.getActiveProfiles());
+        if(activeProfiles.contains("dev")) {
+            http.csrf().disable();
+            http.headers().frameOptions().disable();
+        }
         http
                 .authorizeRequests()
                 .antMatchers(PUBLIC_MATCHERS).permitAll()
