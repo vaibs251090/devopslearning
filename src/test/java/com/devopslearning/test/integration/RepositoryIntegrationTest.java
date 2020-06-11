@@ -8,6 +8,9 @@ import com.devopslearning.backend.persistence.domain.backend.UserRole;
 import com.devopslearning.backend.persistence.repositories.PlanRepository;
 import com.devopslearning.backend.persistence.repositories.RoleRepository;
 import com.devopslearning.backend.persistence.repositories.UserRespository;
+import com.devopslearning.enums.PlansEnum;
+import com.devopslearning.enums.RolesEnum;
+import com.devopslearning.utils.UserUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,6 +20,7 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import javax.jws.soap.SOAPBinding;
 import javax.persistence.EntityNotFoundException;
 import java.util.HashSet;
 import java.util.Optional;
@@ -41,63 +45,36 @@ public class RepositoryIntegrationTest {
         Assert.assertNotNull(roleRepository);
         Assert.assertNotNull(planRepository);
     }
-    public static final int BASIC_PLAN_ID =1;
-    public static final int BASIC_ROLE_ID =1;
-    public static final int BASIC_ROLE_ID_2 =2;
+
 
 
     @Test
     public void testCreateNewPlan(){
-        Plan basicPlan = createBasicPlan();
+        Plan basicPlan = createBasicPlan(PlansEnum.BASIC);
         planRepository.save(basicPlan);
-        Plan retrievePlan = planRepository.findById(BASIC_PLAN_ID).orElseThrow(EntityNotFoundException::new);
+        Plan retrievePlan = planRepository.findById(PlansEnum.BASIC.getId()).orElseThrow(EntityNotFoundException::new);
         Assert.assertNotNull(retrievePlan);
     }
 
-    public Plan createBasicPlan(){
-        Plan basicPlan = new Plan();
-        basicPlan.setId(BASIC_PLAN_ID);
-        basicPlan.setName("Basic");
-        return basicPlan;
+    public Plan createBasicPlan(PlansEnum plansEnum){
+        return new Plan(plansEnum);
     }
 
     @Test
     public void testCreateNewRole(){
-        Role basicRole = createBasicRole(BASIC_ROLE_ID_2);
-        roleRepository.save(basicRole);
-        Role retrieveRole = roleRepository.findById(BASIC_ROLE_ID_2).orElseThrow(EntityNotFoundException::new);
+        Role role = createBasicRole(RolesEnum.ADMIN);
+        roleRepository.save(role);
+        Role retrieveRole = roleRepository.findById(RolesEnum.BASIC.getId()).orElseThrow(EntityNotFoundException::new);
         Assert.assertNotNull(retrieveRole);
     }
 
-    public Role createBasicRole(int role_id){
-        Role basicRole = new Role();
-        basicRole.setId(role_id);
-        basicRole.setName("Basic");
-        return basicRole;
+    public Role createBasicRole(RolesEnum rolesEnum){
+        return new Role(rolesEnum);
     }
 
     @Test
     public void createNewUser(){
-        Plan basicPlan = createBasicPlan();
-        planRepository.save(basicPlan);
-
-        User basicUser = createBasicUser();
-        basicUser.setPlan(basicPlan);
-
-        Role basicRole = createBasicRole(BASIC_ROLE_ID);
-        Set<UserRole> userRoles = new HashSet<>();
-        UserRole userRole = new UserRole();
-        userRole.setRole(basicRole);
-        userRole.setUser(basicUser);
-        userRoles.add(userRole);
-
-        basicUser.getUserRoles().addAll(userRoles);
-
-        for (UserRole ur: userRoles) {
-            roleRepository.save(ur.getRole());
-        }
-
-        basicUser = userRespository.save(basicUser);
+        User basicUser = createUser(PlansEnum.BASIC, RolesEnum.BASIC);
         User createNewUser = userRespository.findById(basicUser.getId()).orElseThrow(EntityNotFoundException::new);
         Assert.assertTrue(createNewUser.getId() != 0);
         Assert.assertNotNull(createNewUser.getPlan());
@@ -108,23 +85,29 @@ public class RepositoryIntegrationTest {
             Assert.assertNotNull(ur.getRole().getId());
         }
 
-
-
-        
     }
 
-    public User createBasicUser(){
-        User user = new User();
-        user.setUsername("basicUser");
-        user.setPassword("secret");
-        user.setEmail("ma@gmail.com");
-        user.setFirstName("firstName");
-        user.setLastName("lastName");
-        user.setPhoneNumber("12345567");
-        user.setCountry("GB");
-        user.setEnabled(true);
-        user.setDescription("This is a description");
-        user.setProfileImageUrl("https://blabla.images.com/basicuser");
-        return user;
+    @Test
+    public void testDeleteUser() throws Exception{
+        User basicUser = createUser(PlansEnum.PRO, RolesEnum.ADMIN);
+        userRespository.deleteById(basicUser.getId());
     }
+    public User createUser(PlansEnum plansEnum, RolesEnum rolesEnum){
+        Plan plan = createBasicPlan(plansEnum);
+        planRepository.save(plan);
+
+        User basicUser = UserUtils.createBasicUser();
+        basicUser.setPlan(plan);
+
+        Role role = createBasicRole(rolesEnum);
+        roleRepository.save(role);
+
+        Set<UserRole> userRoles = new HashSet<>();
+        userRoles.add(new UserRole(basicUser, role));
+
+        basicUser.getUserRoles().addAll(userRoles);
+        basicUser = userRespository.save(basicUser);
+        return basicUser;
+    }
+
 }
